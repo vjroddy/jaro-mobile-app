@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "JARO",
+    "slug": "jaro-mobile-app",
+    "platforms": ["android", "ios", "web"],
+    "version": "1.0.0",
+    "orientation": "portrait"
+  }
+}
