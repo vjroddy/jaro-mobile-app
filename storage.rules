@@ -1,0 +1,23 @@
+// Firebase Storage rules (basic). Deploy with: firebase deploy --only storage:rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Avatars folder: only owner can write
+    match /avatars/{userId}.jpg {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Posts media
+    match /posts/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read: if false;
+      allow write: if false;
+    }
+  }
+}

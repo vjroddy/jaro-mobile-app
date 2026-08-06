@@ -1,18 +1,23 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Platform } from 'react-native';
 import { initializeFirebase } from './firebase/config';
 import AuthScreen from './screens/AuthScreen';
 import FeedScreen from './screens/FeedScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import { registerForPushNotificationsAsync } from './notifications';
 
 initializeFirebase();
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  React.useEffect(() => {
+    // Register push notifications (logs token)
+    registerForPushNotificationsAsync();
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Auth">
