@@ -1,23 +1,23 @@
-# JARO Mobile App (Expo + Firebase) - minimal scaffold
+# JARO Fullstack - Quickstart
 
-This repo contains a minimal Expo + TypeScript scaffold for a mobile MVP using Firebase (Auth, Firestore, Storage).
+This branch (fullstack/jaro) contains a work-in-progress full-stack implementation for the JARO platform. It includes a backend scaffold (Express + TypeScript + Prisma), an admin scaffold, and docker-compose for local development.
 
-Run locally
-1. Install expo-cli if you don't have it: npm install -g expo-cli
-2. Clone and install dependencies:
+Important: this is the initial commit and several pieces (mobile app integration, Cloudinary, real mobile-money provider integration, and CI) will be added incrementally.
+
+Quick steps (development):
+1. Start docker compose (Postgres + backend dev):
+   docker-compose up --build
+
+2. From another shell, generate Prisma client and run migrations (first time):
+   cd backend
    npm install
-3. Copy environment example and fill Firebase values:
-   cp .env.example .env
-4. Start the dev server:
-   npm start
-   or
-   npm run android
+   npx prisma generate
+   # create migration (optional) and apply
+   npx prisma migrate dev --name init
 
-Notes
-- Fill in Firebase config values in src/firebase/config.ts or use a secure secrets flow.
-- This is a starter scaffold: implement features, screens, and backend rules as needed.
+3. Start the backend dev server (inside the backend folder):
+   npm run dev
 
-Files added
-- package.json, tsconfig.json, app.json
-- src/ with basic screens and firebase config
-
+Notes:
+- Mobile-money integration is stubbed to use a webhook flow. We'll integrate a provider (Flutterwave recommended) and wire the phone number +256709665041 into payment initiation where supported.
+- Do NOT commit real API keys. Use the .env.example values as templates and set secrets in your hosting/CI provider.
