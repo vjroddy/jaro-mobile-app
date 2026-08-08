@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { initiatePayment, verifyWebhookSignature } from '../services/flutterwave';
 
 const prisma = new PrismaClient();
 const router = Router();
+const DEFAULT_PHONE = process.env.DEFAULT_MOBILE_NUMBER || '+256709665041';
 
-// Initiate a mobile-money payment (stubbed for Flutterwave/Mobile Money)
+// Initiate a mobile-money payment (integrated with provider when configured)
 router.post('/initiate', async (req, res) => {
   const { userId, plan, amount, phone } = req.body;
   if (!userId || !plan || !amount) return res.status(400).json({ error: 'userId, plan and amount required' });
@@ -17,9 +19,20 @@ router.post('/initiate', async (req, res) => {
       data: { reference, amount: Number(amount), userId: Number(userId), status: 'pending' }
     });
 
-    // In a real integration we'd call the mobile-money provider API here (e.g., Flutterwave) to prompt payment
-    // For now return a stubbed response that the client can poll or wait for webhook
-    return res.json({ reference: payment.reference, status: payment.status, provider: process.env.MOBILE_MONEY_PROVIDER || 'mobile_money', phone: phone || null });
+    // Use provided phone or default number
+    const targetPhone = phone || DEFAULT_PHONE;
+
+    let providerResponse = null;
+    if (process.env.MOBILE_MONEY_PROVIDER === 'flutterwave' && process.env.FLUTTERWAVE_SECRET) {
+      try {
+        providerResponse = await initiatePayment({ amount: Number(amount), phone: targetPhone, reference });
+      } catch (e: any) {
+        console.error('Provider initiation error', e?.response?.data || e.message || e);
+        // keep providerResponse null and allow client to poll or wait for webhook
+      }
+    }
+
+    return res.json({ reference: payment.reference, status: payment.status, provider: process.env.MOBILE_MONEY_PROVIDER || 'mobile_money', phone: targetPhone, providerResponse });
   } catch (e: any) {
     console.error(e);
     return res.status(500).json({ error: e.message });
@@ -30,9 +43,18 @@ router.post('/initiate', async (req, res) => {
 router.post('/webhook', async (req, res) => {
   // Provider should POST JSON with reference, status, amount, phone, and optionally signature
   const { reference, status, amount, userId } = req.body;
-  if (!reference) return res.status(400).json({ error: 'reference required' });
 
   try {
+    if (process.env.MOBILE_MONEY_PROVIDER === 'flutterwave' && process.env.FLUTTERWAVE_SECRET) {
+      const ok = verifyWebhookSignature(req.headers, req.body);
+      if (!ok) {
+        console.warn('Invalid webhook signature');
+        return res.status(400).json({ error: 'invalid signature' });
+      }
+    }
+
+    if (!reference) return res.status(400).json({ error: 'reference required' });
+
     const payment = await prisma.payment.findUnique({ where: { reference } });
     if (!payment) {
       console.warn('payment not found for reference', reference);
