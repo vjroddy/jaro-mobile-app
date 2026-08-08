@@ -6,6 +6,7 @@ import AuthScreen from './screens/AuthScreen';
 import FeedScreen from './screens/FeedScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import SubscriptionScreen from './screens/SubscriptionScreen';
 import { registerForPushNotificationsAsync } from './notifications';
 
 initializeFirebase();
@@ -25,6 +26,7 @@ export default function App() {
         <Stack.Screen name="Feed" component={FeedScreen} />
         <Stack.Screen name="Create" component={CreatePostScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Subscribe" component={SubscriptionScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
